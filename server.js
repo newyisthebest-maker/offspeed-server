@@ -2,11 +2,20 @@ require("dotenv").config();
 const express = require("express");
 const Stripe = require("stripe");
 const cors = require("cors");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "offspeedbaseball.co1@gmail.com",
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 // Allow your frontend domain to call this server
 app.use(cors({
@@ -25,8 +34,8 @@ app.post("/send-welcome-email", async (req, res) => {
   if (!email) return res.status(400).json({ error: "No email provided" });
 
   try {
-    await resend.emails.send({
-      from: "OFFspeed Baseball <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: '"OFFspeed Baseball" <offspeedbaseball.co1@gmail.com>',
       to: email,
       subject: "Welcome to OFFspeed Baseball! ⚾",
       html: `
