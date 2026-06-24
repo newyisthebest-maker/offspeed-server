@@ -8,7 +8,7 @@ const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // 🔑 Replace re_xxxxxxxxx with your real Resend API key
-const resend = new Resend("re_xxxxxxxxx");
+const resend = new Resend("re_aGr9adyb_NNa2pVY91i3TcafzSg6XTLX4");
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || "*"
