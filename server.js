@@ -1,33 +1,38 @@
-import express from "express";
-import cors from "cors";
-import { Resend } from "resend";
+require("dotenv").config();
+const express = require("express");
+const Stripe = require("stripe");
+const cors = require("cors");
 
 const app = express();
-app.use(cors());
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*"
+}));
 app.use(express.json());
 
-// 🔑 Replace re_xxxxxxxxx with your real Resend API key
-const resend = new Resend("re_xxxxxxxxx");
+app.get("/", (req, res) => {
+  res.send("Offspeed server is running");
+});
 
-app.post("/send-welcome-email", async (req, res) => {
-  const { email, name } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
+app.post("/create-payment-intent", async (req, res) => {
   try {
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: "offspeedbaseball.co1@gmail.com",
-      subject: "thanks for signing in!",
-      html: "<p>thanks for shopping with offspeedbaseball.co now that you have signed in you may earn discount codes and future rewards!</p>",
+    const { amountInCents, customerEmail } = req.body;
+    if (!amountInCents || amountInCents < 50) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: "usd",
+      receipt_email: customerEmail,
+      metadata: {
+        source: "offspeed-baseball"
+      }
     });
-
-    res.json({ success: true });
+    res.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
-    console.error("Resend error:", err);
-    res.status(500).json({ error: "Failed to send email" });
+    console.error("PaymentIntent error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
