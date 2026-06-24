@@ -50,7 +50,7 @@ app.post("/send-welcome-email", async (req, res) => {
   try {
     await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: "offspeedbaseball.co1@gmail.com",
+      to: email,
       subject: "thanks for signing in!",
       html: "<p>thanks for shopping with offspeedbaseball.co now that you have signed in you may earn discount codes and future rewards!</p>",
     });
