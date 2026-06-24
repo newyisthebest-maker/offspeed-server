@@ -2,25 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const Stripe = require("stripe");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Allow your frontend domain to call this server
 app.use(cors({
   origin: process.env.FRONTEND_URL || "*"
 }));
 app.use(express.json());
-
-// Gmail transporter using env variables
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "offspeedbaseball.co1@gmail.com",
-    pass: process.env.GMAIL_APP_PASSWORD, // Add this to Render environment variables
-  },
-});
 
 // Health check — Render uses this to confirm the server is running
 app.get("/", (req, res) => {
@@ -33,8 +25,8 @@ app.post("/send-welcome-email", async (req, res) => {
   if (!email) return res.status(400).json({ error: "No email provided" });
 
   try {
-    await transporter.sendMail({
-      from: '"OFFspeed Baseball" <offspeedbaseball.co1@gmail.com>',
+    await resend.emails.send({
+      from: "OFFspeed Baseball <onboarding@resend.dev>",
       to: email,
       subject: "Welcome to OFFspeed Baseball! ⚾",
       html: `
@@ -46,6 +38,7 @@ app.post("/send-welcome-email", async (req, res) => {
         </div>
       `,
     });
+    console.log(`Welcome email sent to ${email}`);
     res.json({ success: true });
   } catch (err) {
     console.error("Email error:", err.message);
